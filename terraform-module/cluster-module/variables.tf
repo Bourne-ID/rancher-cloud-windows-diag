@@ -25,3 +25,10 @@ variable tenant-id {
 variable subscription-id {
   description = "Subscription for this cluster"
 }
+
+variable application-id {
+}
+
+variable secret {
+
+}

@@ -1,5 +1,5 @@
 provider "azurerm" {
-
+  features {}
 }
 
 resource "azuread_application" "ad-application" {

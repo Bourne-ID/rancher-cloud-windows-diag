@@ -1,6 +1,7 @@
 # Configure the Azure Provider
 provider "azurerm" {
-
+  subscription_id = var.azure_subscription_id
+  features {}
 }
 
 data azurerm_subscription "current" {}
@@ -25,7 +26,9 @@ module "k8s-resource-group" {
 
 ## Service Principals
 resource "random_password" "rancher-serviceprincipal-password" {
-  length = 16
+  length = 32
+  special = true
+  override_special = "!"
 }
 
 module "rancher-serviceprincipal-module" {
@@ -219,35 +222,15 @@ resource "local_file" "kube-cluster-yaml" {
   content = rke_cluster.rancher-cluster.kube_config_yaml
 }
 
-# ############### Enable for Cloudflare, you'll need to change the Rancher domain as well. ##########
-module "cloudflare-dns" {
-  source = "./cloudflare-module"
-  
-  domain-name = var.rancher-domain-name
-  cloudflare-email = var.cloudflare-email
-  cloudflare-token = var.cloudflare-token
-  ip-address = module.front-end-lb.ip-address
+resource "random_pet" "mypet" {}
+
+data "http" "myip" {
+  url = "http://ipv4.icanhazip.com"
 }
 
-
-# resource "null_resource" "flush-dns-cache" {
-#   depends_on = [local_file.kube-cluster-yaml]
-#   provisioner "local-exec" {
-#     command = "sudo service network-manager restart"
-#   }
-# }
-
-# resource "null_resource" "wait-for-dns" {
-#   depends_on = [null_resource.flush-dns-cache]
-#   provisioner "local-exec" {
-#     command = "sleep 30"
-#   }
-# }
-
-# ############### END Enable for Cloudflare, you'll need to change the Rancher domain as well. ##########
-
 locals {
-  domain-name = module.front-end-lb.fqdn
+  domain-name = "${random_pet.mypet.id}.dev.bourne.id"
+  my-ip-address = chomp(data.http.myip.body)
 }
 
 resource "null_resource" "initialize-helm" {
@@ -302,6 +285,8 @@ module "cluster-module" {
   subscription-id = data.azurerm_subscription.current.subscription_id
   tenant-id = data.azurerm_subscription.current.tenant_id
   resource-group = module.rancher-resource-group.resource-group
+  application-id = module.rancher-serviceprincipal-module.application-id
+  secret = module.rancher-serviceprincipal-module.secret
 }
 
 module "k8s-etcd" {
@@ -378,4 +363,13 @@ module "join-rancher" {
   public-Ips = module.k8s-windows.publicIps
   private-Ips = module.k8s-windows.privateIps
   join-command = module.cluster-module.windows-node-commmand
+}
+
+module "route53" {
+  source = "./route53-module"
+  access_key = var.aws_access_key
+  access_secret = var.aws_access_secret
+  domain_name = local.domain-name
+  zone_id = var.zone_id
+  fqdn = module.front-end-lb.fqdn
 }

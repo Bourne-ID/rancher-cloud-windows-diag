@@ -7,4 +7,4 @@ terraform.tfvars
 terraform-provider-rke*/
 *.log
 output.json
-kube_config_cluster.yml
+kube_config_cluster.ymlterraform.tfvars

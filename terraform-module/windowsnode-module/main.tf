@@ -1,5 +1,5 @@
 provider "azurerm" {
-
+  features {}
 }
 
 locals {
@@ -20,6 +20,9 @@ resource "azurerm_network_interface" "nic" {
   name                = "${local.prefix}-${count.index}-nic"
   location            = var.resource-group.location
   resource_group_name = var.resource-group.name
+
+  enable_ip_forwarding          = "false"
+  enable_accelerated_networking = true
 
   ip_configuration {
     name                          = "${local.prefix}-ip-config-${count.index}"

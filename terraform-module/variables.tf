@@ -1,3 +1,7 @@
+variable "azure_subscription_id" {
+  description = "The subscription ID to use for Azure"
+}
+
 # Let's Encrypt
 variable "lets-encrypt-email" {
   description = "E-mail address for the let's encrypt account."
@@ -11,16 +15,16 @@ variable "lets-encrypt-environment" {
   default = "staging"
 }
 
-# Cloudflare
-variable "cloudflare-email" {
-  description = "Email Addres for Cloudflare"
-  type = string
-}
-
-variable "cloudflare-token" {
-  description = "Authentication token for Cloudflare"
-}
-
+//# Cloudflare
+//variable "cloudflare-email" {
+//  description = "Email Addres for Cloudflare"
+//  type = string
+//}
+//
+//variable "cloudflare-token" {
+//  description = "Authentication token for Cloudflare"
+//}
+//
 
 # Node Credentials
 variable "node-credentials" {
@@ -66,7 +70,7 @@ variable "rancher-controlplane-node-count" {
 variable "rancher-worker-node-count" {
   type = number
   description = "Number of worker nodes in the RKE Cluster for Rancher HA"
-  default = 3 
+  default = 1
 }
 
 # Kubernetes Cluster
@@ -102,5 +106,18 @@ variable "k8s-worker-node-count" {
 variable "k8s-windows-node-count" {
   type = number
   description = "Number of windows nodes in the k8s cluster"
-  default = 1 
+  default = 2
+}
+
+variable "zone_id" {
+  type = string
+  description = "AWS Route53 Zone ID for parent domain"
+}
+
+variable "aws_access_key" {
+  description = "AWS Access Key"
+}
+
+variable "aws_access_secret" {
+  description = "AWS Access Secret"
 }

@@ -1,5 +1,5 @@
 provider "azurerm" {
-  
+  features {}
 }
 
 
@@ -10,9 +10,7 @@ locals {
 resource "azurerm_virtual_machine_extension" "join-rancher" {
   count                = var.node-count
   name                 = "${var.nodes[count.index].name}-join-rancher"
-  location             = var.resource-group.location
-  resource_group_name  = var.resource-group.name
-  virtual_machine_name = var.nodes[count.index].name
+  virtual_machine_id   = var.nodes[count.index].id
   publisher            = "Microsoft.Compute"
   type                 = "CustomScriptExtension"
   type_handler_version = "1.9"

@@ -1,5 +1,5 @@
 provider "azurerm" {
-
+  features {}
 }
 
 resource "azurerm_key_vault" "kubernetes-vault" {

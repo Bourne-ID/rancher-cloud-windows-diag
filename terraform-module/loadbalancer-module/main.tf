@@ -1,5 +1,5 @@
 provider "azurerm" {
-
+  features {}
 }
 
 resource "azurerm_public_ip" "frontendloadbalancer_publicip" {
