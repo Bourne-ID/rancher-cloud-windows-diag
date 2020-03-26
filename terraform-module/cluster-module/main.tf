@@ -14,7 +14,7 @@ resource "rancher2_cluster" "manager" {
   description = "Hybrid cluster with Windows and Linux workloads"
   # windows_prefered_cluster = true Not currently supported
   rke_config {
-    kubernetes_version = "v1.15.9-rancher1-1"
+    kubernetes_version = "v1.15.11-rancher1-2"
     network {
       plugin = "flannel"
       options = {
@@ -23,13 +23,17 @@ resource "rancher2_cluster" "manager" {
         flannel_backend_vni = 4096
       }
     }
-     cloud_provider {
-       azure_cloud_provider {
-         aad_client_id =  var.application-id
-         aad_client_secret = var.secret
-         subscription_id = var.subscription-id
-         tenant_id = var.tenant-id
-       }
-     }
+    cloud_provider {
+      azure_cloud_provider {
+        cloud = var.cloud
+        aad_client_id = var.application-id
+        aad_client_secret = var.secret
+        subscription_id = var.subscription-id
+        tenant_id = var.tenant-id
+        vm_type = var.vm-type
+        resource_group = var.resource-group.name
+        use_instance_metadata = true
+      }
+    }
   }
 }

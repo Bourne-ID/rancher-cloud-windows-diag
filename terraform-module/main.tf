@@ -35,12 +35,14 @@ module "rancher-serviceprincipal-module" {
   source = "./serviceprincipal-module"
 
   resource-group-id = module.rancher-resource-group.resource-group.id
-  application-name = "rancher-ccm-principal"
+  application-name = random_pet.mypet.id
   password = random_password.rancher-serviceprincipal-password.result
 }
 
 resource "random_password" "k8s-serviceprincipal-password" {
-  length = 16
+  length = 32
+  special = true
+  override_special = "!"
 }
 
 module "k8s-serviceprincipal-module" {
@@ -52,38 +54,38 @@ module "k8s-serviceprincipal-module" {
 }
 
 # Storage Accounts for KeyVault
-module "rancher-storage-account" {
-  source = "./azure-storage-account-module"
-
-  resource-group = module.rancher-resource-group.resource-group
-  storage-account-name = "rancherkeyvault"
-}
-
-module "k8s-storage-account" {
-  source = "./azure-storage-account-module"
-
-  resource-group = module.k8s-resource-group.resource-group
-  storage-account-name = "k8skeyvault"
-}
-
-# KeyVaults to encrypt etcd
-module "rancher-keyvault" {
-  source = "./azure-keyvault-module"
-
-  tenant-id = data.azurerm_subscription.current.tenant_id
-  resource-group = module.rancher-resource-group.resource-group
-  vault-name = "rancherkeyvault"
-  serviceprincipal-id = module.rancher-serviceprincipal-module.service-principal-object-id
-} 
-
-module "k8s-keyvault" {
-  source = "./azure-keyvault-module"
-
-  tenant-id = data.azurerm_subscription.current.tenant_id
-  resource-group = module.k8s-resource-group.resource-group
-  vault-name = "k8skeyvault"
-  serviceprincipal-id = module.k8s-serviceprincipal-module.service-principal-object-id
-} 
+//module "rancher-storage-account" {
+//  source = "./azure-storage-account-module"
+//
+//  resource-group = module.rancher-resource-group.resource-group
+//  storage-account-name = "rancherkeyvault"
+//}
+//
+//module "k8s-storage-account" {
+//  source = "./azure-storage-account-module"
+//
+//  resource-group = module.k8s-resource-group.resource-group
+//  storage-account-name = "k8skeyvault"
+//}
+//
+//# KeyVaults to encrypt etcd
+//module "rancher-keyvault" {
+//  source = "./azure-keyvault-module"
+//
+//  tenant-id = data.azurerm_subscription.current.tenant_id
+//  resource-group = module.rancher-resource-group.resource-group
+//  vault-name = "rancherkeyvault"
+//  serviceprincipal-id = module.rancher-serviceprincipal-module.service-principal-object-id
+//}
+//
+//module "k8s-keyvault" {
+//  source = "./azure-keyvault-module"
+//
+//  tenant-id = data.azurerm_subscription.current.tenant_id
+//  resource-group = module.k8s-resource-group.resource-group
+//  vault-name = "k8skeyvault"
+//  serviceprincipal-id = module.k8s-serviceprincipal-module.service-principal-object-id
+//}
 
 # Nodes
 locals {
@@ -229,7 +231,7 @@ data "http" "myip" {
 }
 
 locals {
-  domain-name = "${random_pet.mypet.id}.dev.bourne.id"
+  domain-name = "${random_pet.mypet.id}.${var.rancher-domain-name}"
   my-ip-address = chomp(data.http.myip.body)
 }
 
@@ -273,6 +275,8 @@ module "rancherbootstrap-module" {
 
   rancher-url = "https://${local.domain-name}/"
   admin-password = random_string.random.result
+
+  #todo: Dependencies as this fails on destroy
 }
 
 
@@ -284,9 +288,11 @@ module "cluster-module" {
   rancher_api_token = module.rancherbootstrap-module.admin-token
   subscription-id = data.azurerm_subscription.current.subscription_id
   tenant-id = data.azurerm_subscription.current.tenant_id
-  resource-group = module.rancher-resource-group.resource-group
-  application-id = module.rancher-serviceprincipal-module.application-id
-  secret = module.rancher-serviceprincipal-module.secret
+  resource-group = module.k8s-resource-group.resource-group
+  application-id = module.k8s-serviceprincipal-module.application-id
+  secret = module.k8s-serviceprincipal-module.secret
+  cloud = var.cloud
+  vm-type = "vmss"
 }
 
 module "k8s-etcd" {
@@ -334,7 +340,7 @@ locals {
   windows-node-definition = {
     admin-username = local.node-definition.admin-username
     admin-password = random_string.windows-admin-password.result
-    size = "Standard_D2s_v3"
+    size = "Standard_D4s_v3"
     disk-type = "Premium_LRS"
     publisher = "MicrosoftWindowsServer"
     offer     = "WindowsServer"
@@ -344,7 +350,7 @@ locals {
 }
 
 module "k8s-windows" {
-  source = "./windowsnode-module"
+  source = "./windowsnodevmss-module"
   prefix = "win"
 
   resource-group = module.k8s-resource-group.resource-group
@@ -352,18 +358,20 @@ module "k8s-windows" {
   subnet-id = module.k8s-network.subnet-id
   address-starting-index = var.k8s-etcd-node-count + var.k8s-controlplane-node-count + var.k8s-worker-node-count
   node-definition = local.windows-node-definition
-}
-
-module "join-rancher" {
-  source = "./join-rancher-module"
-  
-  resource-group = module.k8s-resource-group.resource-group
-  node-count = var.k8s-windows-node-count
-  nodes = module.k8s-windows.nodes
-  public-Ips = module.k8s-windows.publicIps
-  private-Ips = module.k8s-windows.privateIps
   join-command = module.cluster-module.windows-node-commmand
 }
+
+// Needed for VM Standard
+//module "join-rancher" {
+//  source = "./join-rancher-module"
+//
+//  resource-group = module.k8s-resource-group.resource-group
+//  node-count = var.k8s-windows-node-count
+//  nodes = module.k8s-windows.nodes
+//  public-Ips = module.k8s-windows.publicIps
+//  private-Ips = module.k8s-windows.privateIps
+//  join-command = module.cluster-module.windows-node-commmand
+//}
 
 module "route53" {
   source = "./route53-module"

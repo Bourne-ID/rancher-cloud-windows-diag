@@ -34,3 +34,7 @@ variable "node-definition" {
     version   = "latest"
   }
 }
+
+variable "join-command" {
+  description = "Rancher Cluster Join Command to be executed"
+}

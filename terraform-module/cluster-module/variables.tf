@@ -27,8 +27,19 @@ variable subscription-id {
 }
 
 variable application-id {
+  description = "The application security ID"
 }
 
 variable secret {
+  description = "The application security secret"
+}
 
+variable cloud {
+  description = "The Azure cloud name. Usually public (blank)"
+  default = ""
+}
+
+variable vm-type {
+  description = "VM type in the cluster. Either Standard or VMSS"
+  default = "standard"
 }

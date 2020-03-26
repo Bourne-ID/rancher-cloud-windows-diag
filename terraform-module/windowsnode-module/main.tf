@@ -22,7 +22,7 @@ resource "azurerm_network_interface" "nic" {
   resource_group_name = var.resource-group.name
 
   enable_ip_forwarding          = "false"
-  enable_accelerated_networking = true
+  enable_accelerated_networking = false
 
   ip_configuration {
     name                          = "${local.prefix}-ip-config-${count.index}"

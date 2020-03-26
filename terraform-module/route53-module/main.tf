@@ -5,7 +5,7 @@ provider "aws" {
 }
 
 resource "aws_route53_record" "bourneidrecord" {
-  name = var.fqdn
+  name = var.domain_name
   type = "CNAME"
   zone_id = var.zone_id
   records = [var.fqdn]

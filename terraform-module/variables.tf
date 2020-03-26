@@ -100,7 +100,7 @@ variable "k8s-controlplane-node-count" {
 variable "k8s-worker-node-count" {
   type = number
   description = "Number of worker nodes in the k8s cluster"
-  default = 1 
+  default = 3
 }
 
 variable "k8s-windows-node-count" {
@@ -120,4 +120,9 @@ variable "aws_access_key" {
 
 variable "aws_access_secret" {
   description = "AWS Access Secret"
+}
+
+variable "cloud" {
+  description = "The Azure Cloud name"
+  default = ""
 }
