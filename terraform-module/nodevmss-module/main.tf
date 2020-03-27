@@ -4,10 +4,9 @@ provider "azurerm" {
 
 locals {
   prefix = var.prefix
-  commandToExecute = replace(replace(var.join-command, "PowerShell -NoLogo -NonInteractive -Command \"& {", ""), " | iex}\"", " --worker | powershell")
 }
 
-resource "azurerm_windows_virtual_machine_scale_set" "vmss" {
+resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   name                  = "${local.prefix}-vmss"
   instances             = var.node-count
   location              = var.resource-group.location
@@ -16,7 +15,13 @@ resource "azurerm_windows_virtual_machine_scale_set" "vmss" {
   overprovision         = false
 
   admin_username        = var.node-definition.admin-username
-  admin_password        = var.node-definition.admin-password
+
+  custom_data           = base64encode(templatefile("./cloud-init.template", { docker-version = var.node-definition.docker-version, admin-username = var.node-definition.admin-username, additionalCommand = var.commandToExecute  }))
+
+  admin_ssh_key {
+    username = var.node-definition.admin-username
+    public_key = file(var.node-definition.ssh-keypath)
+  }
 
   source_image_reference {
     publisher = var.node-definition.publisher
@@ -47,15 +52,4 @@ resource "azurerm_windows_virtual_machine_scale_set" "vmss" {
   lifecycle {
     ignore_changes = [instances]
   }
-}
-
-resource "azurerm_virtual_machine_scale_set_extension" "join-rancher" {
-  name = "JoinRancher"
-  virtual_machine_scale_set_id = azurerm_windows_virtual_machine_scale_set.vmss.id
-  publisher            = "Microsoft.Compute"
-  type                 = "CustomScriptExtension"
-  type_handler_version = "1.9"
-
-  settings = "{ \"commandToExecute\": \"${replace(local.commandToExecute, "--worker", "--worker")}\" }"
-
 }

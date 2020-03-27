@@ -2,6 +2,9 @@ provider "azurerm" {
   features {}
 }
 
+data "azurerm_subscription" "primary" {
+}
+
 resource "azuread_application" "ad-application" {
   name                       = var.application-name
   homepage                   = "https://${var.application-name}"
@@ -16,7 +19,7 @@ resource "azuread_service_principal" "service-principal" {
 
 
 resource "azurerm_role_assignment" "serviceprincipal-role" {
-  scope                = var.resource-group-id
+  scope                = data.azurerm_subscription.primary.id
   role_definition_name = "Contributor"
   principal_id         = azuread_service_principal.service-principal.id
 }

@@ -296,7 +296,7 @@ module "cluster-module" {
 }
 
 module "k8s-etcd" {
-  source = "./node-module"
+  source = "./nodevmss-module"
   prefix = "etcd"
 
   resource-group = module.k8s-resource-group.resource-group
@@ -308,7 +308,7 @@ module "k8s-etcd" {
 }
 
 module "k8s-control" {
-  source = "./node-module"
+  source = "./nodevmss-module"
   prefix = "control"
 
   resource-group = module.k8s-resource-group.resource-group
@@ -320,7 +320,7 @@ module "k8s-control" {
 }
 
 module "k8s-worker" {
-  source = "./node-module"
+  source = "./nodevmss-module"
   prefix = "worker"
 
   resource-group = module.k8s-resource-group.resource-group
