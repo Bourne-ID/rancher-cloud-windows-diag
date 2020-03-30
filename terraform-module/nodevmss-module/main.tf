@@ -6,6 +6,40 @@ locals {
   prefix = var.prefix
 }
 
+resource "azurerm_network_security_group" "vmss-nsgs" {
+  location = var.resource-group.location
+  name = "${local.prefix}-nsgs"
+  resource_group_name = var.resource-group.name
+}
+
+resource "azurerm_network_security_rule" "all_in" {
+  access = "Allow"
+  direction = "Inbound"
+  name = "Accept All In"
+  network_security_group_name = azurerm_network_security_group.vmss-nsgs.name
+  priority = 100
+  protocol = "*"
+  resource_group_name = var.resource-group.name
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+}
+
+resource "azurerm_network_security_rule" "all_out" {
+  access = "Allow"
+  direction = "Outbound"
+  name = "Accept All Out"
+  network_security_group_name = azurerm_network_security_group.vmss-nsgs.name
+  priority = 100
+  protocol = "*"
+  resource_group_name = var.resource-group.name
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+}
+
 resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   name                  = "${local.prefix}-vmss"
   instances             = var.node-count
@@ -38,7 +72,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   network_interface {
     name = "${local.prefix}-NodeNetwork"
     primary = true
-
+    network_security_group_id = azurerm_network_security_group.vmss-nsgs.id
 
     ip_configuration {
       name = "internal"
