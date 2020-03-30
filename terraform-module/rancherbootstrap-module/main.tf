@@ -11,6 +11,7 @@ resource "rancher2_bootstrap" "admin" {
   provider = rancher2.bootstrap
   password = var.admin-password
   telemetry = true
+  depends_on = [var.module-depends-on]
 }
 
 provider "rancher2" {
@@ -27,4 +28,5 @@ resource "rancher2_setting" "url" {
   provider = rancher2.admin
   name = "server-url"
   value = var.rancher-url
+  depends_on = [var.module-depends-on]
 }

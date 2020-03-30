@@ -67,3 +67,7 @@ resource "azurerm_network_interface_nat_rule_association" "worker_nat_associatio
   ip_configuration_name = "${var.prefix}-ip-config-${count.index}"
   nat_rule_id           = azurerm_lb_nat_rule.loadbalancer_nat_https_rule.id
 }
+
+resource "null_resource" "all_settings" {
+  depends_on = [azurerm_network_interface_backend_address_pool_association.worker_address_pool_association, azurerm_network_interface_nat_rule_association.worker_nat_association_http, azurerm_network_interface_nat_rule_association.worker_nat_association_https]
+}

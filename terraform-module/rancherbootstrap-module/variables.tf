@@ -8,3 +8,6 @@ variable "admin-password" {
   description = "New admin password for the Rancher cluster"
 }
 
+variable "module-depends-on" {
+  default = []
+}
