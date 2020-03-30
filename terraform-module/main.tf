@@ -275,7 +275,7 @@ module "rancherbootstrap-module" {
 
   rancher-url = "https://${local.domain-name}/"
   admin-password = random_string.random.result
-
+  module-depends-on = [module.front-end-lb, module.route53.fqdn, module.front-end-lb.all_settings]
   #todo: Dependencies as this fails on destroy
 }
 
